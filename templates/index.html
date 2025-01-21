@@ -221,7 +221,7 @@
         // Function to copy text to clipboard
         function copyToClipboard(text) {
             navigator.clipboard.writeText(text).then(() => {
-                alert("Copied to clipboard: " + text);
+                console.log("Copied to clipboard: " + text);
             }).catch((err) => {
                 console.error("Failed to copy: ", err);
             });
