@@ -1,5 +1,5 @@
 # Youtube rss feed generator
-I love the idea of rss feeds and needed a quick way to get all my yt subscriptions to this format and i made ths thing. You can access it [here](https://google.com)
+I love the idea of rss feeds and needed a quick way to get all my yt subscriptions to this format and i made ths thing. You can access it [here](https://yotube-rss-generator.vercel.app)
 
 # Installation
 1. Install requiered dependencies:
