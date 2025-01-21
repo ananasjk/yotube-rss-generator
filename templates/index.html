@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube RSS Feed Generator</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Roboto Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <style>
+        /* Global Styles */
+        :root {
+            --primary-color: #bb86fc; /* Material Design Purple */
+            --secondary-color: #03dac6; /* Material Design Teal */
+            --background-color: #121212; /* Dark theme background */
+            --surface-color: #1e1e1e; /* Dark theme surface */
+            --text-color: #ffffff; /* White text */
+            --text-secondary-color: #b3b3b3; /* Light gray for secondary text */
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            font-weight: 700;
+            margin-bottom: 30px;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--surface-color);
+            border-radius: 4px;
+            background-color: var(--surface-color);
+            color: var(--text-color);
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 4px;
+            background-color: var(--primary-color);
+            color: var(--background-color);
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: #9a67ea; /* Lighter purple */
+        }
+
+        .btn:active {
+            background-color: #7c4dff; /* Darker purple */
+        }
+
+        /* Status Line */
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            font-size: 14px;
+            color: var(--text-secondary-color);
+        }
+
+        .spinner {
+            border: 3px solid var(--surface-color);
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* History Styles */
+        .history {
+            margin-top: 30px;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            background-color: var(--surface-color);
+            border-radius: 4px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transform: translateX(-50px);
+            animation: slideIn 0.5s ease-out forwards;
+        }
+
+        .history-item strong {
+            color: var(--primary-color);
+        }
+
+        .history-item a {
+            color: var(--secondary-color);
+            text-decoration: none;
+        }
+
+        .history-item a:hover {
+            text-decoration: underline;
+        }
+
+        .copy-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary-color);
+            cursor: pointer;
+            font-size: 16px;
+            transition: color 0.3s ease;
+        }
+
+        .copy-btn:hover {
+            color: var(--primary-color);
+        }
+
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Error Message */
+        .error {
+            color: #cf6679; /* Material Design Error Color */
+            margin-top: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>YouTube RSS Feed Generator</h1>
+        <form id="youtubeForm">
+            <div class="form-group">
+                <input type="text" class="form-control" id="youtubeUrl" placeholder="Enter YouTube Handle or URL (e.g., @averagepixel)" required autocomplete="off">
+            </div>
+            <button type="submit" class="btn">
+                <span class="material-icons">rss_feed</span>
+                Generate RSS Feed
+            </button>
+            <div id="status" class="status" style="display: none;">
+                <div class="spinner"></div>
+                <span id="statusText"></span>
+            </div>
+        </form>
+
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div class="history">
+            <h2>History</h2>
+            <div id="historyList">
+                {% for item in history %}
+                <div class="history-item">
+                    <div>
+                        <strong>{{ item.handle }}:</strong>
+                        <a href="{{ item.rss_link }}" target="_blank">{{ item.rss_link }}</a>
+                    </div>
+                    <button class="copy-btn" onclick="copyToClipboard('{{ item.rss_link }}')">
+                        📋
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+            <form id="clearHistoryForm">
+                <button type="submit" class="btn">
+                    <span class="material-icons">delete</span>
+                    Clear History
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Custom JS -->
+    <script>
+        // Function to copy text to clipboard
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert("Copied to clipboard: " + text);
+            }).catch((err) => {
+                console.error("Failed to copy: ", err);
+            });
+        }
+
+        document.getElementById("youtubeForm").addEventListener("submit", async (event) => {
+            event.preventDefault(); // Prevent form submission
+
+            const youtubeUrl = document.getElementById("youtubeUrl").value.trim();
+            const errorDiv = document.getElementById("error");
+            const statusDiv = document.getElementById("status");
+            const statusText = document.getElementById("statusText");
+
+            // Clear previous error and show status
+            errorDiv.style.display = "none";
+            statusText.textContent = "Fetching channel info...";
+            statusDiv.style.display = "flex";
+
+            try {
+                // If the input is just a handle (e.g., @averagepixel), convert it to a full URL
+                const fullUrl = youtubeUrl.startsWith("@") ? `https://youtube.com/${youtubeUrl}` : youtubeUrl;
+
+                const response = await fetch("/generate", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: `youtube_url=${encodeURIComponent(fullUrl)}`,
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Add the new entry to the history
+                    const historyList = document.getElementById("historyList");
+                    const newEntry = document.createElement("div");
+                    newEntry.classList.add("history-item");
+                    newEntry.innerHTML = `
+                        <div>
+                            <strong>${data.entry.handle}:</strong>
+                            <a href="${data.entry.rss_link}" target="_blank">${data.entry.rss_link}</a>
+                        </div>
+                        <button class="copy-btn" onclick="copyToClipboard('${data.entry.rss_link}')">
+                            📋
+                        </button>
+                    `;
+                    historyList.insertBefore(newEntry, historyList.firstChild); // Add at the top
+
+                    // Clear the input field
+                    document.getElementById("youtubeUrl").value = "";
+                } else {
+                    // Display error
+                    errorDiv.textContent = data.error;
+                    errorDiv.style.display = "block";
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                errorDiv.textContent = "An error occurred. Please try again.";
+                errorDiv.style.display = "block";
+            } finally {
+                // Hide status
+                statusDiv.style.display = "none";
+            }
+        });
+
+        document.getElementById("clearHistoryForm").addEventListener("submit", async (event) => {
+            event.preventDefault(); // Prevent form submission
+
+            try {
+                const response = await fetch("/clear", {
+                    method: "POST",
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Clear the history list
+                    const historyList = document.getElementById("historyList");
+                    historyList.innerHTML = "";
+                }
+            } catch (error) {
+                console.error("Error:", error);
+            }
+        });
+    </script>
+</body>
+</html>
